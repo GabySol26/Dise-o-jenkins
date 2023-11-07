@@ -26,6 +26,10 @@ pipeline {
         stage('Desplegar en AWS') {
             steps {
                 script {
+                    // Copiar la imagen Docker al servidor AWS
+                    sshagent(['$AWS_SSH_CREDENTIALS']) {
+                        sh "scp -o StrictHostKeyChecking=no -i $AWS_SSH_CREDENTIALS $DOCKER_IMAGE $AWS_INSTANCE:/home/ubuntu/exp/"
+                    }
 
                     // Conéctate a la instancia AWS y ejecuta el contenedor Docker
                     sshagent(['$AWS_SSH_CREDENTIALS']) {
