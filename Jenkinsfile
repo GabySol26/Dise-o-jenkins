@@ -26,7 +26,7 @@ pipeline {
         stage('Desplegar la Aplicación') {
             steps {
                 // Copiar los archivos compilados a un servidor web
-                sh 'rsync -avz ./dist/ ubuntu@18.191.228.236:/var/www/html'
+                sh 'rsync -avz ./dist/ Diseño@18.191.228.236:/var/www/html'
             }
         }
     }
