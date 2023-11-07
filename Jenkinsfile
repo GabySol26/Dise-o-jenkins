@@ -9,20 +9,6 @@ pipeline {
             }
         }
 
-        stage('Instalar Dependencias') {
-            steps {
-                // Instalar dependencias de Node.js y Vue CLI
-                sh 'npm install'
-            }
-        }
-
-        stage('Compilar la Aplicación') {
-            steps {
-                // Compilar la aplicación Vue.js
-                sh 'npm run build'
-            }
-        }
-
         stage('Desplegar la Aplicación') {
             steps {
                 // Copiar los archivos compilados a un servidor web
