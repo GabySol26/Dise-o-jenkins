@@ -1,34 +1,40 @@
 pipeline {
     agent any
-    
+
+    environment {
+        DOCKER_IMAGE = 'front'
+        AWS_INSTANCE = '18.191.180.60'
+        AWS_SSH_CREDENTIALS = credentials('system')
+    }
+
     stages {
         stage('Checkout') {
             steps {
-                checkout scm
+                // Clonar el repositorio de GitHub
+                checkout([$class: 'GitSCM', branches: [[name: 'main']], userRemoteConfigs: [[url: 'https://github.com/GabySol26/Dise-o-jenkins']]])
             }
         }
-        stage('Instalar Dependencias') {
+
+        stage('Construir y Empaquetar') {
             steps {
                 sh 'npm install'
-            }
-        }
-        stage('Compilar la Aplicación') {
-            steps {
                 sh 'npm run build'
+                sh 'docker build -t $DOCKER_IMAGE .'
             }
         }
-        stage('Desplegar la Aplicación') {
+
+        stage('Desplegar en AWS') {
             steps {
-                sh 'rsync -avz ./dist/ ubuntu@18.191.180.60:/var/www/html'
+                script {
+
+                    // Conéctate a la instancia AWS y ejecuta el contenedor Docker
+                    sshagent(['$AWS_SSH_CREDENTIALS']) {
+                        sh "ssh -o StrictHostKeyChecking=no -i $AWS_SSH_CREDENTIALS $AWS_INSTANCE 'docker stop front || true'"
+                        sh "ssh -o StrictHostKeyChecking=no -i $AWS_SSH_CREDENTIALS $AWS_INSTANCE 'docker rm 277 || true'"
+                        sh "ssh -o StrictHostKeyChecking=no -i $AWS_SSH_CREDENTIALS $AWS_INSTANCE 'docker run -d -p 80:80 --front front $DOCKER_IMAGE'"
+                    }
+                }
             }
-        }
-    }
-    post {
-        success {
-            echo 'La implementación fue exitosa.'
-        }
-        failure {
-            echo 'La implementación falló. Se requiere acción adicional.'
         }
     }
 }
