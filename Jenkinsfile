@@ -17,9 +17,8 @@ pipeline {
 
         stage('Construir y Empaquetar') {
             steps {
-                sh 'npm install'
-                sh 'npm run build'
-                sh 'docker build -t $DOCKER_IMAGE .'
+                sh 'cd exp'
+                sh 'docker build -t front .'
             }
         }
 
@@ -31,7 +30,7 @@ pipeline {
                     sshagent(['$AWS_SSH_CREDENTIALS']) {
                         sh "ssh -o StrictHostKeyChecking=no -i $AWS_SSH_CREDENTIALS $AWS_INSTANCE 'docker stop front || true'"
                         sh "ssh -o StrictHostKeyChecking=no -i $AWS_SSH_CREDENTIALS $AWS_INSTANCE 'docker rm 277 || true'"
-                        sh "ssh -o StrictHostKeyChecking=no -i $AWS_SSH_CREDENTIALS $AWS_INSTANCE 'docker run -d -p 80:80 --front front $DOCKER_IMAGE'"
+                        sh "ssh -o StrictHostKeyChecking=no -i $AWS_SSH_CREDENTIALS $AWS_INSTANCE 'docker run -d -p 80:80 --name front front'"
                     }
                 }
             }
