@@ -17,8 +17,6 @@ pipeline {
 
         stage('Construir y Empaquetar') {
             steps {
-                sh 'npm install'
-                sh 'npm run build'
                 sh 'docker build -t $DOCKER_IMAGE .'
             }
         }
