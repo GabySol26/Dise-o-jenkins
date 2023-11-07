@@ -1,43 +1,33 @@
 pipeline {
     agent any
 
-    environment {
-        // Define variables que necesites, como las credenciales de despliegue
-        DEPLOY_USER = credentials('ubuntu')  // Ajusta el nombre de las credenciales
-        SERVER_IP = '18.191.180.60'  // IP o nombre de tu servidor
-        REMOTE_DIR = '/var/www/html'  // Directorio de destino en el servidor
-    }
-
     stages {
         stage('Checkout') {
             steps {
                 // Clonar el repositorio de GitHub
-                checkout([$class: 'GitSCM', branches: [[name: 'main']], userRemoteConfigs: [[url: 'https://github.com/GabySol26/Dise-o-jenkins']]])
+                checkout([$class: 'GitSCM', branches: [[name: 'main']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/GabySol26/Dise-o-jenkins']]])
             }
         }
 
-        stage('Build and Test') {
+        stage('Instalar Dependencias') {
             steps {
-                // Puedes agregar pasos para compilar o ejecutar pruebas si es necesario
+                // Instalar dependencias de Node.js y Vue CLI
+                sh 'npm install'
             }
         }
 
-        stage('Deploy Application') {
+        stage('Compilar la Aplicación') {
             steps {
-                // Utilizar rsync para copiar los archivos compilados al servidor
-                sh "rsync -avz ./dist/ ${env.DEPLOY_USER}@${env.SERVER_IP}:${env.REMOTE_DIR}"
+                // Compilar la aplicación Vue.js
+                sh 'npm run build'
             }
         }
-    }
 
-    post {
-        success {
-            // Puedes agregar acciones posteriores al éxito, como notificaciones
-            echo 'La implementación fue exitosa.'
-        }
-        failure {
-            // Puedes manejar errores o tomar acciones específicas en caso de fallo
-            echo 'La implementación falló. Se requiere acción adicional.'
+        stage('Desplegar la Aplicación') {
+            steps {
+                // Copiar los archivos compilados a un servidor web
+                sh 'rsync -avz ./dist/ ubuntu@18.191.180.60:/var/www/html'
+            }
         }
     }
 }
