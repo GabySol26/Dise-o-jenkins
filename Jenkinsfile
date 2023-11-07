@@ -18,19 +18,18 @@ pipeline {
         stage('Construir y Empaquetar') {
             steps {
                 sh 'cd exp'
-                sh 'docker build -t front .'
+                sh 'docker build -t $DOCKER_IMAGE .'
             }
         }
 
         stage('Desplegar en AWS') {
             steps {
                 script {
-
                     // Conéctate a la instancia AWS y ejecuta el contenedor Docker
-                    sshagent(['$AWS_SSH_CREDENTIALS']) {
-                        sh "ssh -o StrictHostKeyChecking=no -i $AWS_SSH_CREDENTIALS $AWS_INSTANCE 'docker stop front || true'"
-                        sh "ssh -o StrictHostKeyChecking=no -i $AWS_SSH_CREDENTIALS $AWS_INSTANCE 'docker rm 277 || true'"
-                        sh "ssh -o StrictHostKeyChecking=no -i $AWS_SSH_CREDENTIALS $AWS_INSTANCE 'docker run -d -p 80:80 --name front front'"
+                    sshagent(credentials: [$class: 'UsernamePasswordMultiBinding', credentialsId: "$AWS_SSH_CREDENTIALS"]) {
+                        sh "ssh -o StrictHostKeyChecking=no -i $AWS_SSH_CREDENTIALS ubuntu@$AWS_INSTANCE 'docker stop $DOCKER_IMAGE || true'"
+                        sh "ssh -o StrictHostKeyChecking=no -i $AWS_SSH_CREDENTIALS ubuntu@$AWS_INSTANCE 'docker rm $DOCKER_IMAGE || true'"
+                        sh "ssh -o StrictHostKeyChecking=no -i $AWS_SSH_CREDENTIALS ubuntu@$AWS_INSTANCE 'docker run -d -p 80:80 --name $DOCKER_IMAGE $DOCKER_IMAGE'"
                     }
                 }
             }
